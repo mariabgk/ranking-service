@@ -1,0 +1,170 @@
+plugins {
+    id 'java'
+    id 'idea'
+    id 'jacoco'
+    id 'maven-publish'
+    id "org.hibernate.build.maven-repo-auth" version "3.0.4"
+    id 'org.springframework.boot' version '2.7.2'
+}
+
+group 'com.com.legalease'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+sourceSets {
+    main {
+        resources {
+            srcDirs(['src/config','src/main/resources'])
+        }
+    }
+
+    testIntegration {
+        java {
+            srcDir 'src/test-integration/java'
+        }
+        resources {
+            srcDir 'src/test-integration/resources'
+        }
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
+
+    testEndToEnd {
+        java {
+            srcDir 'src/test-end-to-end/java'
+        }
+        resources {
+            srcDir 'src/test-end-to-end/resources'
+        }
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
+}
+
+dependencies {
+    // Spring
+    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '2.7.2'
+    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-validation', version: '2.7.2'
+    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-data-jpa', version: '2.7.2'
+    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-actuator', version: '2.7.2'
+
+    // Database
+    implementation group: 'org.postgresql', name: 'postgresql', version: '42.4.0'
+    implementation group: 'org.liquibase.ext', name: 'liquibase-postgresql', version: '4.11.0'
+
+    // Security
+    //implementation group: 'org.springframework.boot', name: 'spring-boot-starter-security', version: '2.7.2'
+    //implementation group: 'org.springframework.boot', name: 'spring-boot-starter-oauth2-resource-server', version: '2.7.2'
+
+    // Documentation
+    implementation group: 'org.springdoc', name: 'springdoc-openapi-ui', version: '1.6.10'
+
+    // Annotation Processors
+    compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.18'
+    annotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.18.18'
+    compileOnly group: 'org.mapstruct', name: 'mapstruct', version: '1.4.2.Final'
+    annotationProcessor group: 'org.mapstruct', name: 'mapstruct-processor', version: '1.4.2.Final'
+
+    // Tests
+    testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '2.7.2'
+    testImplementation group: 'org.testcontainers', name: 'postgresql', version: '1.17.2'
+    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.7.1'
+    testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.7.1'
+}
+
+bootJar {
+    exclude('application*.yml', 'logback-spring.xml')
+}
+
+test {
+    useJUnitPlatform()
+}
+
+configurations {
+    testIntegrationImplementation.extendsFrom testImplementation
+    testIntegrationRuntimeOnly.extendsFrom testRuntimeOnly
+
+    testEndToEndImplementation.extendsFrom testImplementation
+    testEndToEndRuntimeOnly.extendsFrom testRuntimeOnly
+}
+
+task integrationTest(type: Test) {
+    description = 'Runs integration tests.'
+    group = 'verification'
+
+    testClassesDirs = sourceSets.testIntegration.output.classesDirs
+    classpath = sourceSets.testIntegration.runtimeClasspath
+    useJUnitPlatform()
+
+    shouldRunAfter test
+    finalizedBy jacocoTestReport, jacocoTestCoverageVerification
+}
+
+task endToEndTest(type: Test) {
+    description = 'Runs end to end tests.'
+    group = 'verification'
+
+    testClassesDirs = sourceSets.testEndToEnd.output.classesDirs
+    classpath = sourceSets.testEndToEnd.runtimeClasspath
+    useJUnitPlatform()
+
+    shouldRunAfter integrationTest
+    finalizedBy jacocoTestReport, jacocoTestCoverageVerification
+}
+
+// Jacoco configuration
+def reportsTargetFolder = "${jacoco.reportsDir}/all-tests/"
+def jacocoReportXml = "${reportsTargetFolder}jacocoAllTestReport.xml"
+def coverageExcluded = ['**/*Test.*','**/config/**','**/repository/**','**/*Application.*','**/model/**']
+
+jacocoTestReport {
+    getExecutionData().setFrom(fileTree(buildDir).include("/jacoco/*.exec"))
+    reports {
+        xml.enabled true
+        xml.destination(file("${jacocoReportXml}"))
+        html.enabled true
+        html.destination(file("${reportsTargetFolder}html"))
+    }
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: coverageExcluded)
+        }))
+    }
+}
+
+jacocoTestCoverageVerification {
+    getExecutionData().setFrom(fileTree(buildDir).include("/jacoco/*.exec"))
+    violationRules {
+        rule {
+            limit {
+                minimum = 1
+            }
+        }
+    }
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: coverageExcluded)
+        }))
+    }
+}
+
+
+task buildLocalDockerImage(type: Exec) {
+    description = 'Builds Docker Image locally from Dockerfile'
+    group = 'development'
+    dependsOn bootJar
+    workingDir "${project.projectDir}"
+    commandLine "cmd", "/c", "docker build -f Dockerfile -t ${project.name}:${project.version} . --build-arg JAR_FILE=${project.name}-${project.version}.jar"
+    doLast {
+        println "Built Docker Image: ${project.name}:${project.version}"
+    }
+}
+
+tasks.withType(Copy) {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
+
+check.dependsOn endToEndTest

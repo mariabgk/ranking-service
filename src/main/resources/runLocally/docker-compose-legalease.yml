@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  postgres-db:
+    image: postgres:latest
+    container_name: postgres
+    networks:
+      - backend
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    ports:`
+      - "5432:5432"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+    restart: unless-stopped
+  ranking-service:
+    image: ranking-service:1.0-SNAPSHOT
+    container_name: ranking-service
+    networks:
+      - backend
+    ports:
+      - "8201:8201"
+    healthcheck:
+      test: wget --spider http://host.docker.internal:8201/actuator/health || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 10
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+    restart: on-failure
+
+networks:
+  backend:

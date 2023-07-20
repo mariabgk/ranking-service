@@ -1,0 +1,64 @@
+server:
+  port: 8201
+
+logging:
+  level:
+    org.springframework.web: ERROR
+    com.legalease: INFO
+    root: ERROR
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+
+spring:
+  application:
+    name: ranking-service
+  jpa:
+    show-sql: false
+    generate-ddl: false
+    hibernate:
+      ddl-auto: validate
+  datasource:
+    platform: ${config.postgre.platform}
+    driver-class-name: ${config.postgre.driver}
+    url: ${config.postgre.url}
+    username: ${config.postgre.username}
+    password: ${config.postgre.password}
+  liquibase:
+    enabled: true
+    driver-class-name: ${config.postgre.driver}
+    change-log: /db/changelog/changelog.xml
+    url: ${config.postgre.url}
+    user: ${config.postgre.username}
+    password: ${config.postgre.password}
+
+springdoc:
+  api-docs:
+    enabled: ${config.documentation-enabled}
+  swagger-ui:
+    enabled: ${config.documentation-enabled}
+    path: "/"
+
+config:
+  environment:
+    protocol: http
+    url: 127.0.0.1
+
+  postgre:
+    platform: postgres
+    driver: org.postgresql.Driver
+    environment: 127.0.0.1
+    port: 5432
+    schema: legalease_db
+    url: jdbc:postgresql://${config.postgre.environment}:${config.postgre.port}/${config.postgre.schema}?stringtype=unspecified
+    username: postgres
+    password: password
+  documentation-enabled: true

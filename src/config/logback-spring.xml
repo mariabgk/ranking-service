@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <springProperty scope="context" name="application.name" source="spring.application.name" />
+
+    <property name="DATE_PATTERN" value="%d{yyyy-MM-dd HH}"/>
+    <property name="LOG_PATTERN" value="${DATE_PATTERN} %highlight(%-5level) %magenta(${PID}) --- [%thread] %cyan(%logger{36}): %msg%n"/>
+    <property name="FILE_BASE" value="/var/log/services/${application.name}"/>
+
+    <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <Pattern>${LOG_PATTERN}</Pattern>
+        </layout>
+    </appender>
+    <appender name="RollingFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${FILE_BASE}/${application.name}.log</file>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <Pattern>${LOG_PATTERN}</Pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${FILE_BASE}/archived/${application.name}-${DATE_PATTERN}.zip</fileNamePattern>
+            <MaxHistory>240</MaxHistory>
+        </rollingPolicy>
+    </appender>
+
+    <root level="info">
+        <appender-ref ref="Console" />
+        <appender-ref ref="RollingFile" />
+    </root>
+
+</configuration>
