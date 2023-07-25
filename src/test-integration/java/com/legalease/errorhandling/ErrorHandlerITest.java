@@ -85,7 +85,7 @@ class ErrorHandlerITest {
         ErrorResponse expected = new ErrorResponse(expectedException.getMessage());
 
         // When
-        mockMvc.perform(get("/ranking?regionId=&pageNumber=0&pageSize=1"))
+        mockMvc.perform(get("/rankings?regionId=&pageNumber=0&pageSize=1"))
 
                 //Then
                 .andExpect(status().isBadRequest())
@@ -105,7 +105,7 @@ class ErrorHandlerITest {
         ErrorResponse expected = new ErrorResponse(expectedException.getMessage());
 
         // When
-        mockMvc.perform(get("/ranking?pageNumber=0&pageSize=1"))
+        mockMvc.perform(get("/rankings?pageNumber=0&pageSize=1"))
 
                 //Then
                 .andExpect(status().isBadRequest())
@@ -159,7 +159,7 @@ class ErrorHandlerITest {
     }
 
     private String getEndpointForParams(Integer regionId, Integer pageNumber, Integer pageSize) {
-        return String.format("/ranking?regionId=%d&pageNumber=%d&pageSize=%d", regionId, pageNumber, pageSize);
+        return String.format("/rankings?regionId=%d&pageNumber=%d&pageSize=%d", regionId, pageNumber, pageSize);
     }
 
     private String toJsonString(final Object value) throws IOException {

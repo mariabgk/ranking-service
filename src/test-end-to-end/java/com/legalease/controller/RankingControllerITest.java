@@ -38,7 +38,7 @@ class RankingControllerITest extends AbstractContainerBaseTest {
     @LocalServerPort
     private Integer randomServerPort;
 
-    private static final String ENDPOINT = "/ranking";
+    private static final String ENDPOINT = "/rankings";
 
     private RestTemplate restTemplate;
 
@@ -66,6 +66,6 @@ class RankingControllerITest extends AbstractContainerBaseTest {
     }
 
     private String getUrl(int regionId, int pageNumber, int pageSize) {
-        return format("http://localhost:%d/ranking?regionId="+regionId+"&pageNumber=%d&pageSize=%d", randomServerPort, pageNumber, pageSize);
+        return "http://localhost:"+randomServerPort+"/" + ENDPOINT + "?regionId="+regionId+"&pageNumber="+pageNumber+"&pageSize=" + pageSize;
     }
 }

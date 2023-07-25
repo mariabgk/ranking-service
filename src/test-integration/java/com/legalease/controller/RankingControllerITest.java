@@ -120,7 +120,7 @@ class RankingControllerITest {
 
 
     private String getEndpointForParams(Integer regionId, Integer pageNumber, Integer pageSize) {
-        return String.format("/ranking?regionId=%d&pageNumber=%d&pageSize=%d", regionId, pageNumber, pageSize);
+        return String.format("/rankings?regionId=%d&pageNumber=%d&pageSize=%d", regionId, pageNumber, pageSize);
     }
 
     private String toJsonString(final Object value) throws IOException {

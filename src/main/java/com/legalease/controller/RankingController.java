@@ -4,6 +4,7 @@ import com.legalease.errorhandling.ErrorResponse;
 import com.legalease.model.mapper.RankingMapper;
 import com.legalease.model.response.RankingResponse;
 import com.legalease.service.RankingService;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -36,9 +37,15 @@ public class RankingController {
     @Autowired
     private RankingMapper mapper;
 
+    @Operation(
+            summary = "Get rankings | Retrieves a list of rankings for a given regionId.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Retrieved", content = {@Content(schema = @Schema(implementation = RankingResponse.class))})
+            }
+    )
     //TODO this would need an auth server somewhere (either ours or external) -and ideally a gateway too
     //@PreAuthorize("hasAnyAuthority('LEGALEASE_READ','SCOPE_MICROSERVICE')")
-    @GetMapping(value = "/ranking", produces = "application/com.com.legalease.api.v1+json")
+    @GetMapping(value = "/rankings", produces = "application/com.com.legalease.api.v1+json")
     ResponseEntity<RankingResponse> getRankings(@RequestParam(required = false) Integer regionId, @RequestParam @NotNull @Min(0) Integer pageNumber,
                                               @RequestParam @NotNull @Min(1) Integer pageSize){
 
